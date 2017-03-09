@@ -86,14 +86,6 @@ public class bot{
 		return api_resp;    
 	}
 	
-	public static void sendTweet(String username, String message){
-	    // Sends tweet @username with message
-		// Probably better version of this in the library.
-	}
-
-	public static void getMentions(String username, String[] messages){
-		// Probably better version of this in library.
-	}
 	
 	/////////////////////////
 	///  Data Processing
