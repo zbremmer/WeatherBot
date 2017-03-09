@@ -26,6 +26,9 @@ import java.text.SimpleDateFormat;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -37,6 +40,12 @@ import org.xml.sax.SAXException;
 
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
+
+import twitter4j.DirectMessage;
+import twitter4j.Twitter;
+import twitter4j.TwitterException;
+import twitter4j.TwitterFactory;
+import twitter4j.auth.AccessToken;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -51,10 +60,11 @@ public class bot{
 	
 	final static String WEATHERAPIKEY = "dfcf81b71ea3ec9d3d40ec9737694ac6";
 	final static String TWITTERAPIKEY = "";
-	final static String USERCSVFPATH = "";
+	final static String USERCSVFPATH = "C://Users//Zach.Bremmer//Desktop//user_names.csv";
 	final static String WEATHERCODEFPATH = "";
 	final static String RESPLISTFPATH = ""; 
 	final static String WEATHERURL = "http://api.openweathermap.org/data/2.5/forecast/daily?zip=";  
+	final static Pattern p = Pattern.compile("^[0-9]{5}(?:-[0-9]{4})?$");
 
 			
 	/////////////////////////
@@ -165,12 +175,12 @@ public class bot{
 		// Test the values sent through fcast. They will always be the same order so just use index get values.
 		// String[] resp = {weathCode, maxTemp, minTemp, precip, clouds, humidity}
 		
-		// Test temp
-		if(Math.abs(Double.parseDouble(fcast[1]) - yesterdayMaxTemp) > 19){
+		// Test temp -- ignore if yesterdayMaxTemp = -11111 since that's default for a new user
+		if(yesterdayMaxTemp != -11111 && Math.abs(Double.parseDouble(fcast[1]) - yesterdayMaxTemp) > 19){
 			respCode += "t";
 		}
 		
-		if(Double.parseDouble(fcast[3]) > 50){
+		if(fcast[3] != "-11111" && Double.parseDouble(fcast[3]) > 50){
 			respCode += "p";
 		}
 		
@@ -195,8 +205,6 @@ public class bot{
 		
 		// Get message from responseList and build final message. 
 		
-		// Load dict and lookup weather code
-		//String weath = map.get(weathCode);
 		//String tweet = weath + ", high of " + format.format(maxTemp) + "\u00B0F. Low of " + format.format(minTemp) + "\u00B0F overnight.";
 		//System.out.println(tweet);
 		//System.out.println("Number of Chars : " + tweet.length());
@@ -212,18 +220,58 @@ public class bot{
 	///  Control 
 	///////////////////////// 
 	 
-	public static void checkMentions(){
-	// Check to see if anyone tweeted at the bot and add them
-	// if messages = TRUE :
-	// test message to see if includes zip (11111 or 11111-1111). If True: 
-	// get_city_id(zip);
-	// add_user(username, zip, cityid);
-	// send_tweet(username, "You will now receive daily forecasts for " + location_name)
-		 
+	public static void checkDM() throws TwitterException, IOException{
+		
+		// Initialize Twitter object
+		Twitter t = TwitterFactory.getSingleton();  // is getSingleton right one to use? 
+		
+		// Pull messages
+		List<DirectMessage> messages = t.getDirectMessages();
+		
+		if(messages.isEmpty()){
+			return; // Exit function if there are no messages
+		}
+		
+		// Open user_names.csv
+		File userNamesFile = new File(USERCSVFPATH);
+		CSVReader r = new CSVReader(new FileReader(userNamesFile), ',');
+		List<String[]> userNameList = r.readAll();
+		r.close();
+		
+		// Parse messages
+		for(int i = 0; i < messages.size(); i++){
+			
+			DirectMessage msg = messages.get(i);
+			
+			String msgTxt = msg.getText();
+			String userName = msg.getSender().toString(); // or getScreenName()?
+			long msgID = msg.getId();
+			
+			Matcher m = p.matcher(msgTxt);
+			
+			if(m.find()){
+				String zipCode = m.group(0).substring(0,5); // Only want first five of zip
+				
+				// add username, zip to csv. Add '-11111' for maxTemp;
+				userNameList.add(new String[] {userName, zipCode, "-11111"});
+				
+				// Send confirmation tweet / DM
+				t.updateStatus(userName + " Good to go! You will now get forecasts for " + zipCode);
+			}
+			
+			// Delete message 
+			t.destroyDirectMessage(msgID);
+		}
+		
+		// Write new records to user_names.csv
+		CSVWriter w = new CSVWriter(new FileWriter(userNamesFile));
+		w.writeAll(userNameList);
+		w.flush();
+		w.close();
 	}
 
-	@SuppressWarnings("unchecked")
-	public static void sendDailyForecasts() throws IOException, ClassNotFoundException{
+	@SuppressWarnings({ "unchecked", "null" })
+	public static void sendDailyForecasts() throws IOException, ClassNotFoundException, TwitterException{
 				
 		/////////
 		// Open files
@@ -235,145 +283,76 @@ public class bot{
 		Map<String, List<String>> responseList = (Map<String, List<String>>) oin.readObject();
 		fin.close();
 		oin.close();
-		 
-		// Open weather codes list object (may not need...)
-		FileInputStream fin2 = new FileInputStream("C://Users//Zach.Bremmer//Desktop//weathercodes");
-		ObjectInputStream oin2 = new ObjectInputStream(fin2);
-		Map<Integer, String> weatherCodes = (Map<Integer, String>) oin2.readObject();
-		fin2.close();
-		oin2.close();
 		
+		// Open user_names.csv and grab all records
+		File userNamesFile = new File(USERCSVFPATH);
+		CSVReader r = new CSVReader(new FileReader(userNamesFile), ',');
+		List<String[]> userNameList = r.readAll();
+		r.close();
+			
+		/////////
+		// Build data structures
+		////////
+
+		List<Integer> zipList = null; // Unique zip code list
+		Map<Integer, String> messageDict = new HashMap<Integer, String>(); // zip:message Dictionary
+		Map<Integer, Double> temperDict = new HashMap<Integer, Double>(); // zip:maxTemp Dictionary
+
 		// Get the day of the week for today
 		Date n = new Date();
 		SimpleDateFormat df = new SimpleDateFormat("EEEE");
 		String day = df.format(n);
 		
-		
-		/////////
-		// Build data structures
-		////////
-		
-		
-		// Open csv and grab each record 
-		File userNames = new File("C://Users//Zach.Bremmer//Desktop//user_names.csv");
-		CSVReader r = new CSVReader(new FileReader(userNames), ',');
-		List<String[]> userNameList = r.readAll();
-		r.close();
-		
-		List<Integer> zipList = null; // Unique zip code list
-		Map<Integer, String> messageDict = new HashMap<Integer, String>(); // zip:message Dictionary
-		Map<Integer, Double> temperDict = new HashMap<Integer, Double>(); // zip:maxTemp Dictionary
+		// Initialize Twitter object
+		Twitter t = TwitterFactory.getSingleton();
 		
 		// Iterate through all users, send forecast, update maxTemp
 		for(int i = 0; i < userNameList.size(); i++){
+			
 			int currZip = Integer.parseInt(userNameList.get(i)[1]);
+			
 			if(zipList.stream().mapToInt(Integer::intValue).anyMatch(x -> x == currZip)){
+				
 				// Already have forecast and message for this zip code
 				String msg = messageDict.get(currZip);
+				String userName = userNameList.get(i)[0];
 				
-				// send tweet
+				// send tweet (as tweet or as DM?)
+				t.updateStatus(userName + " " + msg);
 				
 				// update maxTemp
 				userNameList.get(i)[2] = String.valueOf(temperDict.get(currZip));
+			
 			} else {
-				// New zip, need to run through all functions.
+				
+				// New zip, need to get forecast
 				int yesterdayMaxTemp = Integer.parseInt(userNameList.get(i)[2]);
 				
 				// get forecast
 				String resp = getForecast(currZip);
 				String[] respParsed = parseXML(/*still need to figure out args for this*/);
-				String message = simplifyForecast(respParsed, day, yesterdayMaxTemp, responseList);				
+				String msg = simplifyForecast(respParsed, day, yesterdayMaxTemp, responseList);				
 				
 				// add items to lists
 				double maxTemp = Double.parseDouble(respParsed[1]);
 				zipList.add(currZip);
-				messageDict.put(currZip, message);
+				messageDict.put(currZip, msg);
 				temperDict.put(currZip, maxTemp);
 				
-				// send tweet
+				// send tweet (as tweet or as DM?)
+				String userName = userNameList.get(i)[0];
+				t.updateStatus(userName + " " + msg);
 				
 				// update maxTemp
 				userNameList.get(i)[2] = String.valueOf(maxTemp);
 			}
 		}
 		
-		CSVWriter w = new CSVWriter(new FileWriter(userNames));
+		CSVWriter w = new CSVWriter(new FileWriter(userNamesFile));
 		w.writeAll(userNameList);
 		w.flush();
 		w.close();
-		
-		
-		
-//		
-//		
-//		///////////// BELOW IS OLD AND UNFINISHED EXCEPT THE CSVWRITING FUNCTIONS WHICH WILL BE USED
-//		
-//		// Build out list of unique zip codes
-//
-//		for(int i = 0; i < userNameList.size(); i++){
-//			int k = i;	
-//			int[] tmpList = new int[zipList.size()];
-//			
-//			// Get first col from zipList to test if zip is already added (can't find a better way to do this)
-//			for(int j = 0; j < zipList.size(); j++){
-//				int[][] tmp = zipList.get(j);
-//				tmpList[j] = tmp[0][0];
-//			}
-//			
-//			if(! IntStream.of(tmpList).anyMatch(x -> x == Integer.parseInt(userNameList.get(k)[1]))){
-//				int[][] tmp2 = new int[1][2];
-//				tmp2[0][0] = Integer.parseInt(userNameList.get(i)[1]);
-//				tmp2[0][1] = (int)(Math.round(Double.parseDouble(userNameList.get(i)[2]))); 
-//				zipList.add(tmp2);
-//			}
-//		}		
-//		
-//
-//		// Build messages for each unique zip code
-//		// What data structure for this??
-//		List<Integer, Double, String> messageList = new ArrayList<Integer, Double, String>();
-//		for(int i = 0; i < zipList.length; i++){
-//			String resp = getForecast(zipList[i][0]);
-//			double maxTemp = resp[1];
-//			int yesterdayMaxTemp = zipList[i][1];
-//			String message = simplifyForecast(forecast, day, yesterdayMaxTemp, responseList);
-//			messageList.put(zipList[i][0], maxTemp, message);
-//		}
-//		
-//		// Iterate through for each user, send message, update maxTemp in csv
-//		for(int i = 0; i < body.size(); i++){
-//			
-//		}
-//		
-//		
-//		
-//		
-//		int zip = 98144;
-//		
-//		double yesterdayMaxTemp = 33.33;
-//		String[] forecast = parseXML(weatherCodes);
-//		
-//		
-//		// Save today's maxTemp in csv for tomorrow
-//		
-//		// send_tweet(username, message);
-//			// same message for everyone in a given area code?
-//		
-//		// Below uses library opencsv http://opencsv.sourceforge.net/
-//		File userNames = new File("C://Users//Zach.Bremmer//Desktop//user_names.csv");
-//		CSVReader r = new CSVReader(new FileReader(userNames), ',');
-//		List<String[]> body = r.readAll();
-//		
-//		//body.get(row)[col] = newVal;
-//		//r.close();
-//		
-//		//CSVWriter w = new CSVWriter(new FileWriter(userNames), ",");
-//		//w.writeAll(body);
-//		//w.flush();
-//		//w.close();
-//		
-		
-
+	
 	}
 	
 	 
@@ -383,7 +362,7 @@ public class bot{
 	
 	 public static void main(String[] args) throws IOException, ClassNotFoundException{
 		Timer t1 = new Timer();
-		t1.schedule( new CheckMentionsTask(), 0, 14400000); // 4 hour delay in milliseconds
+		t1.schedule( new CheckDMsTask(), 0, 14400000); // 4 hour delay in milliseconds
 		t1.schedule(new SendForecastTask(), 300000, 86400000); // 24 hour delay in milliseconds. Delay initial run by 5 minutes.			
 	 }
 	 
@@ -394,11 +373,16 @@ public class bot{
 ///  TimerTask Classes
 /////////////////////////
 
-class CheckMentionsTask extends TimerTask{
+class CheckDMsTask extends TimerTask{
 
 	@Override
 	public void run() {
-		bot.checkMentions();
+		try {
+			bot.checkDM();
+		} catch (TwitterException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		// What if this method fails? How will java respond?
 	}
 	
@@ -410,7 +394,7 @@ class SendForecastTask extends TimerTask{
 	public void run() {
 		try {
 			bot.sendDailyForecasts();
-		} catch (ClassNotFoundException | IOException e) {
+		} catch (ClassNotFoundException | IOException | TwitterException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			// How to continue if this fails?

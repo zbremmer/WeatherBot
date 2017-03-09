@@ -17,7 +17,7 @@ public class twittertest{
 
 	public static void main(String[] args) throws TwitterException{
 		
-		Twitter t = TwitterFactory.getSingleton();
+		Twitter t = TwitterFactory.getSingleton();  // is getSingletion() right one to use?
 		t.setOAuthConsumer(CONSUMERKEY, CONSUMERKEYSECRET);
 		AccessToken at = new AccessToken(ACCESSTOKEN, ACCESSTOKENSECRET);
 		t.setOAuthAccessToken(at);
