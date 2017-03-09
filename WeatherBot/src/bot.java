@@ -45,7 +45,6 @@ import twitter4j.DirectMessage;
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
-import twitter4j.auth.AccessToken;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -59,14 +58,12 @@ public class bot{
 	/////////////////////////
 	
 	final static String WEATHERAPIKEY = "dfcf81b71ea3ec9d3d40ec9737694ac6";
-	final static String TWITTERAPIKEY = "";
 	final static String USERCSVFPATH = "C://Users//Zach.Bremmer//Desktop//user_names.csv";
 	final static String WEATHERCODEFPATH = "";
 	final static String RESPLISTFPATH = ""; 
 	final static String WEATHERURL = "http://api.openweathermap.org/data/2.5/forecast/daily?zip=";  
 	final static Pattern p = Pattern.compile("^[0-9]{5}(?:-[0-9]{4})?$");
-
-			
+	
 	/////////////////////////
 	///  API Functions
 	/////////////////////////
@@ -85,7 +82,6 @@ public class bot{
 
 		return api_resp;    
 	}
-	
 	
 	/////////////////////////
 	///  Data Processing
@@ -147,7 +143,6 @@ public class bot{
 		 }
 	}	
 	
-
 	public static String simplifyForecast(String[] fcast, String day, double yesterdayMaxTemp, Map<String, List<String>> responseList){
 		/* NONE OF THIS IS TESTED YET.
 		 * 
@@ -341,9 +336,7 @@ public class bot{
 		w.writeAll(userNameList);
 		w.flush();
 		w.close();
-	
 	}
-	
 	 
 	/////////////////////////
 	///  Program Driver
@@ -372,7 +365,6 @@ class CheckDMsTask extends TimerTask{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		// What if this method fails? How will java respond?
 	}
 	
 }
@@ -386,7 +378,7 @@ class SendForecastTask extends TimerTask{
 		} catch (ClassNotFoundException | IOException | TwitterException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			// How to continue if this fails?
 		}
 	}
+	
 }
