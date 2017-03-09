@@ -155,9 +155,6 @@ public class bot{
 		 }
 	}	
 	
-	public static void addUser(String username, int zip){
-		    // Add user to csv file
-	}
 
 	public static String simplifyForecast(String[] fcast, String day, double yesterdayMaxTemp, Map<String, List<String>> responseList){
 		/* NONE OF THIS IS TESTED YET.
