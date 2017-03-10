@@ -151,7 +151,12 @@ public class bot{
 		 * Snow - 255mm, 500mm
 		 * Temp Change - +- 20*F
 		 * 
-		 * Hail is bad all the time so just use binary y/n for this.
+		 * Hail is bad all the time so just use binary y/n for this. 
+		 * 
+		 * 
+		 * If hail occurs at all, just go to 'h' UNLESS it is in combination with snow. Then s1h0, etc. But if it's hailing
+		 * and raining/temp just do h
+		 * 
 		 */
 		
 		String respCode = "";
