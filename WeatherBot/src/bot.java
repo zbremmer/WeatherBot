@@ -62,6 +62,10 @@ public class bot{
 	final static String WEATHERCODEFPATH = "";
 	final static String RESPLISTFPATH = ""; 
 	final static String WEATHERURL = "http://api.openweathermap.org/data/2.5/forecast/daily?zip=";  
+	final static String CONSUMERKEY = "Ym4Xjs7CyRbmWkAryqGmt9OxF";
+	final static String CONSUMERKEYSECRET = "1UIdZXTPkZ1jImRRm5Xx36GboI9PgC0zJziyucoHi65IHZLA6y";
+	final static String ACCESSTOKEN = "838929779592048640-NxFATadd0qj2NSvUFZgV3VJATaXbYg2";
+	final static String ACCESSTOKENSECRET = "dIbIRTBppBWNRSJVl5eaOmr6pFKgE7ZA2D96xxIRyO1Av";
 	final static Pattern p = Pattern.compile("^[0-9]{5}(?:-[0-9]{4})?$");
 	
 	/////////////////////////
@@ -73,21 +77,38 @@ public class bot{
 		// This assumes that the user is in the US (country code needs to be passed to api)
 		
 		// Construct final url
-		String args = zip + ",us&APPID=" + WEATHERAPIKEY + "&mode=xml";
-		URL weathURL = new URL(WEATHERURL);
-		URL tmp_url = new URL(weathURL, args);
+		URL tmpURL = new URL(WEATHERURL + zip + ",us&APPID=" + WEATHERAPIKEY + "&mode=xml");
 		    
 		// Call api (include error catching) -- may return as xml object instead of string
-		String api_resp = " "; //call_url(tmp_url);
-
-		return api_resp;    
+		String result = "";
+		  
+	    try {
+		URLConnection conn = tmpURL.openConnection();
+		BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+			
+		String inputLine; 
+		while ((inputLine = in.readLine()) != null){
+			result += inputLine;
+		}
+		
+		in.close();
+		
+	    } catch (MalformedURLException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	    } catch (IOException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	    }
+	    
+	    return result;  
 	}
 	
 	/////////////////////////
 	///  Data Processing
 	/////////////////////////
 	
-	public static String[] parseXML(/* File? HttpResponse? */) {
+	public static String[] parseXML(String xmlString) {
 
 		String precip = null, clouds = null, maxTemp = null, minTemp = null, humidity = null, weathCode = null, precipVal = null;  	
 		DecimalFormat format = new DecimalFormat("#");
@@ -211,8 +232,13 @@ public class bot{
 	 
 	public static void checkDM() throws TwitterException, IOException{
 		
-		// Initialize Twitter object
-		Twitter t = TwitterFactory.getSingleton();  // is getSingleton right one to use? 
+		// This won't work. Can't send a DM unless @Weather___bot follows you... so just do mentions and parse the message I guess. 
+		
+		// Initialize Twitter object and authenticate
+		Twitter t = TwitterFactory.getSingleton();
+		t.setOAuthConsumer(CONSUMERKEY, CONSUMERKEYSECRET);
+		AccessToken at = new AccessToken(ACCESSTOKEN, ACCESSTOKENSECRET);
+		t.setOAuthAccessToken(at);
 		
 		// Pull messages
 		List<DirectMessage> messages = t.getDirectMessages();
@@ -258,6 +284,60 @@ public class bot{
 		w.flush();
 		w.close();
 	}
+	
+	public static void checkMentions() throws TwitterException, IOException{
+		// May need to check usernames in the csv. I assume that getMentionsTimeline() will pull all 
+		// mentions, including the ones I've already added. There will also be more junk since a mention could
+		// be anything. Hopefully the regex will deal with this without a problem. 
+		
+		
+		// Initialize Twitter object and authenticate
+		Twitter t = TwitterFactory.getSingleton();
+		t.setOAuthConsumer(CONSUMERKEY, CONSUMERKEYSECRET);
+		AccessToken at = new AccessToken(ACCESSTOKEN, ACCESSTOKENSECRET);
+		t.setOAuthAccessToken(at);
+		
+		// Get mentions
+		List<Status> stats = t.getMentionsTimeline();
+		
+		if(stats.isEmpty()){
+			return; // Exit function if there are no mentions
+		}
+		
+		// Open user_names.csv
+		File userNamesFile = new File(USERCSVFPATH);
+		CSVReader r = new CSVReader(new FileReader(userNamesFile), ',');
+		List<String[]> userNameList = r.readAll();
+		r.close();
+		
+		// Parse mentions
+		for(Status s : stats){
+					
+			String msgTxt = s.getText();
+			String userName = s.getUser().toString(); // or getScreenName()?
+					
+			Matcher m = p.matcher(msgTxt);
+					
+			if(m.find()){
+				String zipCode = m.group(0).substring(0,5); // Only want first five of zip
+						
+				// add username, zip to csv. Add '-11111' for maxTemp;
+				userNameList.add(new String[] {userName, zipCode, "-11111"});
+						
+				// Send confirmation tweet / DM
+				t.updateStatus(userName + " Good to go! You will now get forecasts for " + zipCode);
+			}
+					
+		}
+				
+		// Write new records to user_names.csv
+		CSVWriter w = new CSVWriter(new FileWriter(userNamesFile));
+		w.writeAll(userNameList);
+		w.flush();
+		w.close();
+		
+	}
+	
 
 	@SuppressWarnings({ "unchecked", "null" })
 	public static void sendDailyForecasts() throws IOException, ClassNotFoundException, TwitterException{
@@ -292,8 +372,12 @@ public class bot{
 		SimpleDateFormat df = new SimpleDateFormat("EEEE");
 		String day = df.format(n);
 		
-		// Initialize Twitter object
+		// Initialize Twitter object and authenticate
 		Twitter t = TwitterFactory.getSingleton();
+		t.setOAuthConsumer(CONSUMERKEY, CONSUMERKEYSECRET);
+		AccessToken at = new AccessToken(ACCESSTOKEN, ACCESSTOKENSECRET);
+		t.setOAuthAccessToken(at);
+		
 		
 		// Iterate through all users, send forecast, update maxTemp
 		for(int i = 0; i < userNameList.size(); i++){
@@ -319,7 +403,7 @@ public class bot{
 				
 				// get forecast
 				String resp = getForecast(currZip);
-				String[] respParsed = parseXML(/*still need to figure out args for this*/);
+				String[] respParsed = parseXML(resp);
 				String msg = simplifyForecast(respParsed, day, yesterdayMaxTemp, responseList);				
 				
 				// add items to lists
