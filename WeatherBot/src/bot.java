@@ -42,9 +42,11 @@ import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
 
 import twitter4j.DirectMessage;
+import twitter4j.Status;
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
+import twitter4j.auth.AccessToken;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -59,7 +61,6 @@ public class bot{
 	
 	final static String WEATHERAPIKEY = "dfcf81b71ea3ec9d3d40ec9737694ac6";
 	final static String USERCSVFPATH = "/Users/zbremmer/Desktop/user_names.csv";
-	final static String WEATHERCODEFPATH = "";
 	final static String RESPLISTFPATH = ""; 
 	final static String WEATHERURL = "http://api.openweathermap.org/data/2.5/forecast/daily?zip=";  
 	final static String CONSUMERKEY = "Ym4Xjs7CyRbmWkAryqGmt9OxF";
