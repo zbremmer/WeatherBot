@@ -58,7 +58,7 @@ public class bot{
 	/////////////////////////
 	
 	final static String WEATHERAPIKEY = "dfcf81b71ea3ec9d3d40ec9737694ac6";
-	final static String USERCSVFPATH = "C://Users//Zach.Bremmer//Desktop//user_names.csv";
+	final static String USERCSVFPATH = "/Users/zbremmer/Desktop/user_names.csv";
 	final static String WEATHERCODEFPATH = "";
 	final static String RESPLISTFPATH = ""; 
 	final static String WEATHERURL = "http://api.openweathermap.org/data/2.5/forecast/daily?zip=";  
@@ -338,7 +338,6 @@ public class bot{
 		
 	}
 	
-
 	@SuppressWarnings({ "unchecked", "null" })
 	public static void sendDailyForecasts() throws IOException, ClassNotFoundException, TwitterException{
 				
@@ -432,9 +431,11 @@ public class bot{
 	/////////////////////////
 	
 	 public static void main(String[] args) throws IOException, ClassNotFoundException{
-		Timer t1 = new Timer();
-		t1.schedule( new CheckDMsTask(), 0, 14400000); // 4 hour delay in milliseconds
-		t1.schedule(new SendForecastTask(), 300000, 86400000); // 24 hour delay in milliseconds. Delay initial run by 5 minutes.			
+		//Timer t1 = new Timer();
+		//t1.schedule( new CheckDMsTask(), 0, 14400000); // 4 hour delay in milliseconds
+		//t1.schedule(new SendForecastTask(), 300000, 86400000); // 24 hour delay in milliseconds. Delay initial run by 5 minutes.			
+		 //checkMentions();
+	 
 	 }
 	 
 }
