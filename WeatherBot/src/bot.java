@@ -24,6 +24,7 @@ import java.net.*;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Map;
+import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.regex.Matcher;
@@ -188,9 +189,6 @@ public class bot{
 		
 		// The respCode string needs to be built in the following order: temp, precip, snow, hail, day
 		
-		
-		
-		
 		// Test temp -- ignore if yesterdayMaxTemp = -11111 since that's default for a new user
 		if(yesterdayMaxTemp != -11111 && Math.abs(Double.parseDouble(fcast[1]) - yesterdayMaxTemp) > 15){
 			respCode += "t";
@@ -214,8 +212,9 @@ public class bot{
 			}
 		}
 		
-		// Hail -- needs to be added to parseXML method. 
-		
+		if(fcast[0].equals("906")){
+			respCode += "h";
+		}
 		
 		switch(day){
 			case "Monday": 	respCode += "3";
@@ -234,17 +233,19 @@ public class bot{
 							break;
 		}
 		
-		
+		// Build first half of message based on weather forecast (*NEED TO RETURN WEATHER CONDITIONS FROM XML OR LOOKUP CODE VALUES*)
+		String weath = "RAIN, CLOUDY, TORNADO, WHATEVER THE CODE STANDS FOR";
+		String message = weath + ", high of " + Math.round(Double.parseDouble(fcast[1])) + "\u00B0F. Low of " + Math.round(Double.parseDouble(fcast[1])) + "\u00B0F. ";
 		
 		// Get message from responseList and build final message. 
-		
-		//String tweet = weath + ", high of " + format.format(maxTemp) + "\u00B0F. Low of " + format.format(minTemp) + "\u00B0F overnight.";
-		//System.out.println(tweet);
-		//System.out.println("Number of Chars : " + tweet.length());
+		// import java.lang.util.Random
+		Random r = new Random();
+		message += responseList.get(respCode).get(r.nextInt(3)+1);
 		
 		// Need to test length and rewrite if too long. 
-		
-		String message = null;
+		if(message.length() > 140){
+			System.out.println("Message is too long.");
+		}
 		
 		return message;
 	}
@@ -457,7 +458,7 @@ public class bot{
 		//Timer t1 = new Timer();
 		//t1.schedule( new CheckDMsTask(), 0, 14400000); // 4 hour delay in milliseconds
 		//t1.schedule(new SendForecastTask(), 300000, 86400000); // 24 hour delay in milliseconds. Delay initial run by 5 minutes.			
-		 //checkMentions();
+		//checkMentions();
 	 
 	 }
 	 
