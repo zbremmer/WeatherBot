@@ -186,14 +186,36 @@ public class bot{
 		// Test the values sent through fcast. They will always be the same order so just use index get values.
 		// String[] resp = {weathCode, maxTemp, minTemp, precip, clouds, humidity}
 		
+		// The respCode string needs to be built in the following order: temp, precip, snow, hail, day
+		
+		
+		
+		
 		// Test temp -- ignore if yesterdayMaxTemp = -11111 since that's default for a new user
-		if(yesterdayMaxTemp != -11111 && Math.abs(Double.parseDouble(fcast[1]) - yesterdayMaxTemp) > 19){
+		if(yesterdayMaxTemp != -11111 && Math.abs(Double.parseDouble(fcast[1]) - yesterdayMaxTemp) > 15){
 			respCode += "t";
 		}
 		
-		if(fcast[3] != "-11111" && Double.parseDouble(fcast[3]) > 50){
-			respCode += "p";
+		if(Integer.parseInt(fcast[0]) < 600 ){
+			// Rain
+			if(fcast[3] != "-11111" && Double.parseDouble(fcast[3]) > 50){
+				respCode += "p2";
+			} else if(fcast[3] != "-11111" && Double.parseDouble(fcast[3]) > 0){
+				respCode += "p1";
+			}
+		} else if(Integer.parseInt(fcast[0]) < 700){
+			// Snow
+			if(fcast[3] != "-11111" && Double.parseDouble(fcast[3]) > 500){
+				respCode += "s3";
+			} else if(fcast[3] != "-11111" && Double.parseDouble(fcast[3]) > 255){
+				respCode += "s2";
+			} else if(fcast[3] != "-11111" && Double.parseDouble(fcast[3]) > 0){
+				respCode += "s1";
+			}
 		}
+		
+		// Hail -- needs to be added to parseXML method. 
+		
 		
 		switch(day){
 			case "Monday": 	respCode += "3";
