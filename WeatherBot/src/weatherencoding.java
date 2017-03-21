@@ -1,14 +1,15 @@
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.opencsv.CSVReader;
 
 // The code below contains the data structure for the message based on the weather forecast. 
 // Each combination of weather will have its own key (t, p, s1, s2, etc.) which will be used to 
@@ -19,156 +20,162 @@ public class weatherencoding{
 
 	public static void main(String[] args) throws IOException{
 		
-	
 		Map<String, List<String>> responseList = new HashMap<String, List<String>>();
-	
-		List<String> t3 = new ArrayList<>(Arrays.asList("Warm, cold.. Make up your mind!", "What's with this weather?"));
-		responseList.put("t3", t3);
+
+		File f = new File("C://Users//Zach.Bremmer//Desktop//codes_messages.csv");
+		CSVReader r = new CSVReader(new FileReader(f), ',');
+		List<String[]> respCSV = r.readAll();
+		r.close();
+		
+		for(int i = 0; i < respCSV.size(); i++){
+			List<String> a = new ArrayList<>(Arrays.asList(respCSV.get(i)[1], respCSV.get(i)[2], respCSV.get(i)[3]));
+			responseList.put(respCSV.get(i)[0], a);
+			System.out.println(respCSV.get(i)[0]);
+		}
+		
+
+		FileOutputStream f2 = new FileOutputStream("C://Users//Zach.Bremmer//Desktop//coded_messages");
+		ObjectOutputStream o = new ObjectOutputStream(f2);
+		o.writeObject(responseList);
+		o.close();
+		f2.close();
+		
+	}
+}
+		
+		/*
+		List<String> tp10 = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("tp10", tp10);
 				
-		List<String> t2 = new ArrayList<>(Arrays.asList("Crazy temp change again", ""));
-		responseList.put("t2", t2);
+		List<String> tp11  = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("tp11", tp11);
 		
-		List<String> t1 = new ArrayList<>(Arrays.asList("", ""));
-		responseList.put("t1", t1);
+		List<String> tp12  = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("tp12", tp12);
 		
-		List<String> t0 = new ArrayList<>(Arrays.asList("", ""));
-		responseList.put("t0", t0);
+		List<String> tp13  = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("tp13", tp13);
 		
-		List<String> p3 = new ArrayList<>(Arrays.asList("Here comes the ocean!", "Raining cats and dogs!"));
-		responseList.put("p3", p3);
+		List<String> tp20  = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("tp20", tp20);
 		
-		List<String> p2 = new ArrayList<>(Arrays.asList("Stay dry out there!", ""));
-		responseList.put("p2", p2);
+		List<String> tp21  = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("tp21", tp21);
 		
-		List<String> p1 = new ArrayList<>(Arrays.asList("Some people feel the rain. Others just get wet.", "Rain rain go away..."));
-		responseList.put("p1", p1);
+		List<String> tp22  = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("tp22", tp22);
 		
-		List<String> p0 = new ArrayList<>(Arrays.asList("Rain rain go away...", ""));
-		responseList.put("p0", p0);
+		List<String> tp23  = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("tp23", tp23);
 		
-		List<String> s13 = new ArrayList<>(Arrays.asList("", ""));
-		responseList.put("s13", s13);
-		
-		List<String> s12 = new ArrayList<>(Arrays.asList("", ""));
-		responseList.put("s12", s12);
-		
-		List<String> s11 = new ArrayList<>(Arrays.asList("", ""));
-		responseList.put("s11", s11);
-		
-		List<String> s10 = new ArrayList<>(Arrays.asList("", ""));
-		responseList.put("s10", s10);
-		
-		List<String> s23 = new ArrayList<>(Arrays.asList("Time to binge some Netflix!", ""));
-		responseList.put("s23", s23);
-		
-		List<String> s22 = new ArrayList<>(Arrays.asList("", ""));
-		responseList.put("s22", s22);
-		
-		List<String> s21 = new ArrayList<>(Arrays.asList("Guess you won't be going out this weekend.", "Do you want to build a snowman?"));
-		responseList.put("s21", s21);
-		
-		List<String> s20 = new ArrayList<>(Arrays.asList("", ""));
-		responseList.put("s20", s20);
-		
-		List<String> h = new ArrayList<>(Arrays.asList("The sky is falling!", "Make sure you wear a helmet."));
-		responseList.put("h", h);
-		
-		List<String> tp3 = new ArrayList<>(Arrays.asList("Starting the week with a bang.", "Just in time to start the week. Of course."));
-		responseList.put("tp3", tp3);
-		
-		List<String> tp2 = new ArrayList<>(Arrays.asList("", ""));
-		responseList.put("tp2", tp2);
-		
-		List<String> tp1 = new ArrayList<>(Arrays.asList("", ""));
-		responseList.put("tp1", tp1);
-		
-		List<String> tp0 = new ArrayList<>(Arrays.asList("", ""));
-		responseList.put("tp0", tp0);
-		
-		List<String> ts13 = new ArrayList<>(Arrays.asList("", ""));
-		responseList.put("ts13", ts13);
-		
-		List<String> ts12 = new ArrayList<>(Arrays.asList("", ""));
-		responseList.put("ts12", ts12);
-		
-		List<String> ts11 = new ArrayList<>(Arrays.asList("", ""));
-		responseList.put("ts11", ts11);
-		
-		List<String> ts10 = new ArrayList<>(Arrays.asList("", ""));
+		List<String> ts10  = new ArrayList<>(Arrays.asList("", "", ""));
 		responseList.put("ts10", ts10);
 		
-		List<String> ts23 = new ArrayList<>(Arrays.asList("", ""));
-		responseList.put("ts23", ts23);
+		List<String> ts11  = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("ts11", ts11);
 		
-		List<String> ts22 = new ArrayList<>(Arrays.asList("", ""));
-		responseList.put("ts22", ts22);
+		List<String> ts12 = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("ts12", ts12);
 		
-		List<String> ts21 = new ArrayList<>(Arrays.asList("", ""));
-		responseList.put("ts21", ts21);
+		List<String> ts13  = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("ts13", ts13);
 		
-		List<String> ts20 = new ArrayList<>(Arrays.asList("", ""));
+		List<String> ts20  = new ArrayList<>(Arrays.asList("", "", ""));
 		responseList.put("ts20", ts20);
 		
-		List<String> ps13 = new ArrayList<>(Arrays.asList("", ""));
-		responseList.put("ps13", ps13);
+		List<String> ts21 = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("ts21", ts21);
 		
-		List<String> ps12 = new ArrayList<>(Arrays.asList("", ""));
-		responseList.put("ps12", ps12);
+		List<String> ts22  = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("ts22", ts22);
 		
-		List<String> ps11 = new ArrayList<>(Arrays.asList("", ""));
-		responseList.put("ps11", ps11);
+		List<String> ts23  = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("ts23", ts23);
 		
-		List<String> ps10 = new ArrayList<>(Arrays.asList("", ""));
-		responseList.put("ps10", ps10);
+		List<String> ts30  = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("ts30", ts30);
 		
-		List<String> ps23 = new ArrayList<>(Arrays.asList("", ""));
-		responseList.put("ps23", ps12);
+		List<String> ts31  = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("ts31", ts31);
 		
-		List<String> ps22 = new ArrayList<>(Arrays.asList("", ""));
-		responseList.put("ps22", ps22);
+		List<String> ts32  = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("ts32", ts32);
 		
-		List<String> ps21 = new ArrayList<>(Arrays.asList("", ""));
-		responseList.put("ps21", ps21);
+		List<String> ts33  = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("ts33", ts33);
 		
-		List<String> ps20 = new ArrayList<>(Arrays.asList("", ""));
-		responseList.put("ps20", ps20);
-			
-		List<String> s1h3 = new ArrayList<>(Arrays.asList("", ""));
-		responseList.put("s1h3", s1h3);
+		List<String> p10  = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("p10", p10);
 		
-		List<String> s1h2 = new ArrayList<>(Arrays.asList("", ""));
-		responseList.put("s1h2", s1h2);
+		List<String> p11  = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("p11", p11);
 		
-		List<String> s1h1 = new ArrayList<>(Arrays.asList("", ""));
-		responseList.put("s1h1", s1h1);
+		List<String> p12 = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("p12", p12);
 		
-		List<String> s1h0 = new ArrayList<>(Arrays.asList("", ""));
-		responseList.put("s1h0", s1h0);
+		List<String> p13  = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("p13", p13);
 		
-		List<String> s2h3 = new ArrayList<>(Arrays.asList("", ""));
-		responseList.put("s2h3", s2h3);
+		List<String> p20  = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("p20", p20);
 		
-		List<String> s2h2 = new ArrayList<>(Arrays.asList("", ""));
-		responseList.put("s2h2", s2h2);
+		List<String> p21  = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("p21", p21);
 		
-		List<String> s2h1 = new ArrayList<>(Arrays.asList("", ""));
-		responseList.put("s2h1", s2h1);
+		List<String> p22  = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("p22", p22);
 		
-		List<String> s2h0 = new ArrayList<>(Arrays.asList("", ""));
-		responseList.put("s2h0", s2h0);
+		List<String> p23  = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("p23", p23);
 		
-		//EDGE CASES - Single response is okay. 
-		List<String> ps1h = new ArrayList<>(Arrays.asList("", ""));
-		responseList.put("ps1h", ps1h);
+		List<String> s10  = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("s10", s10);
 		
-		List<String> ps2h = new ArrayList<>(Arrays.asList("", ""));
-		responseList.put("ps2h", ps2h);
+		List<String> s11 = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("s11", s11);
 		
-		List<String> ps1ht = new ArrayList<>(Arrays.asList("", ""));
-		responseList.put("ps1ht", ps1ht);
+		List<String> s12 = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("s12", s12);
 		
-		List<String> ps2ht = new ArrayList<>(Arrays.asList("", ""));
-		responseList.put("ps2ht", ps2ht);
+		List<String> s13  = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("s13", s13);
+		
+		List<String> s20  = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("s20", s20);
+		
+		List<String> s21  = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("s21", s21);
+		
+		List<String> s22  = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("s22", s22);
+		
+		List<String> s23 = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("s23", s23);
+		
+		//EDGE CASES  
+		List<String> h  = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("h", h);
+		
+		List<String> t  = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("t", t);
+		
+		List<String> tp1h  = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("tp1h", tp1h);
+		
+		List<String> tp2h = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("tp2h", tp2h);
+		
+		List<String> ts1h  = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("ts1h", ts1h);
+		
+		List<String> ts2h  = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("ts2h", ts2h);
+		
+		List<String> ts3h   = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("ts3h",  ts3h);
+		
+		List<String> th = new ArrayList<>(Arrays.asList("", "", ""));
+		responseList.put("th", th);
 		
 		// Save the object so it doesn't need to be rebuilt each time
 		// import java.io.*;
@@ -198,4 +205,4 @@ public class weatherencoding{
 
 	}
 
-}
+}*/

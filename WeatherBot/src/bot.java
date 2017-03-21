@@ -170,16 +170,11 @@ public class bot{
 		/* NONE OF THIS IS TESTED YET.
 		 * 
 		 * Weather cutoff values:
-		 * Precip - 51mm
-		 * Snow - 255mm, 500mm
-		 * Temp Change - +- 20*F
+		 * Precip - 51mm  (1.97")
+		 * Snow - 255mm, 500mm (10", 19.68")
+		 * Temp Change - +- 15*F
 		 * 
 		 * Hail is bad all the time so just use binary y/n for this. 
-		 * 
-		 * 
-		 * If hail occurs at all, just go to 'h' UNLESS it is in combination with snow. Then s1h0, etc. But if it's hailing
-		 * and raining/temp just do h
-		 * 
 		 */
 		
 		String respCode = "";
@@ -189,23 +184,22 @@ public class bot{
 		
 		// The respCode string needs to be built in the following order: temp, precip, snow, hail, day
 		
-		// Test temp -- ignore if yesterdayMaxTemp = -11111 since that's default for a new user
 		if(yesterdayMaxTemp != -11111 && Math.abs(Double.parseDouble(fcast[1]) - yesterdayMaxTemp) > 15){
 			respCode += "t";
 		}
 		
 		if(Integer.parseInt(fcast[0]) < 600 ){
 			// Rain
-			if(fcast[3] != "-11111" && Double.parseDouble(fcast[3]) > 50){
+			if(fcast[3] != "-11111" && Double.parseDouble(fcast[3]) > 1.97){
 				respCode += "p2";
 			} else if(fcast[3] != "-11111" && Double.parseDouble(fcast[3]) > 0){
 				respCode += "p1";
 			}
 		} else if(Integer.parseInt(fcast[0]) < 700){
 			// Snow
-			if(fcast[3] != "-11111" && Double.parseDouble(fcast[3]) > 500){
+			if(fcast[3] != "-11111" && Double.parseDouble(fcast[3]) > 19.68){
 				respCode += "s3";
-			} else if(fcast[3] != "-11111" && Double.parseDouble(fcast[3]) > 255){
+			} else if(fcast[3] != "-11111" && Double.parseDouble(fcast[3]) > 10){
 				respCode += "s2";
 			} else if(fcast[3] != "-11111" && Double.parseDouble(fcast[3]) > 0){
 				respCode += "s1";
@@ -213,24 +207,25 @@ public class bot{
 		}
 		
 		if(fcast[0].equals("906")){
+			// If hailing, don't worry about the day of the week. 
 			respCode += "h";
-		}
-		
-		switch(day){
-			case "Monday": 	respCode += "3";
-							break;
-			case "Tuesday": respCode += "3";
-							break;
-			case "Wednesday":respCode += "2";
-							break;
-			case "Thursday":respCode += "1";
-							break;
-			case "Friday": 	respCode += "0";
-							break;
-			case "Saturday":respCode += "0";
-							break;
-			case "Sunday": 	respCode += "0";
-							break;
+		} else {
+			switch(day){
+				case "Monday": 	respCode += "3";
+								break;
+				case "Tuesday": respCode += "3";
+								break;
+				case "Wednesday":respCode += "2";
+								break;
+				case "Thursday":respCode += "1";
+								break;
+				case "Friday": 	respCode += "0";
+								break;
+				case "Saturday":respCode += "0";
+								break;
+				case "Sunday": 	respCode += "0";
+								break;
+			}
 		}
 		
 		// Build first half of message based on weather forecast (*NEED TO RETURN WEATHER CONDITIONS FROM XML OR LOOKUP CODE VALUES*)
@@ -240,7 +235,7 @@ public class bot{
 		// Get message from responseList and build final message. 
 		// import java.lang.util.Random
 		Random r = new Random();
-		message += responseList.get(respCode).get(r.nextInt(3)+1);
+		message += responseList.get(respCode).get(r.nextInt(3));
 		
 		// Need to test length and rewrite if too long. 
 		if(message.length() > 140){
@@ -459,6 +454,30 @@ public class bot{
 		//t1.schedule( new CheckDMsTask(), 0, 14400000); // 4 hour delay in milliseconds
 		//t1.schedule(new SendForecastTask(), 300000, 86400000); // 24 hour delay in milliseconds. Delay initial run by 5 minutes.			
 		//checkMentions();
+		 
+		 Map<String, List<String>> respList = new HashMap<String, List<String>>();
+			
+			try {		
+			  FileInputStream fin = new FileInputStream("F://School//CS 142//Final//coded_messages");
+			  ObjectInputStream oin = new ObjectInputStream(fin);
+				respList = (Map<String, List<String>>) oin.readObject();
+			  fin.close();
+			  oin.close();
+			} catch (ClassNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		 String[] f = {"232", "51.1", "38", "2.5", "cloudy", "92.4"};
+		 System.out.println(simplifyForecast(f, "Monday", 50.1, respList));
+		 
+		 String[] g = {"504", "51.1", "38", "2", "cloudy", "92.4"};
+		 System.out.println(simplifyForecast(g, "Monday", 20, respList));
+		 
+		 String[] h = {"602", "51.1", "38", "19", "cloudy", "92.4"};
+		 System.out.println(simplifyForecast(h, "Monday", 65, respList));
+		 
+		 
 	 
 	 }
 	 
