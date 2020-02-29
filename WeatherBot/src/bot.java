@@ -64,10 +64,10 @@ public class bot{
 	final static String USERCSVFPATH = "/Users/zbremmer/Desktop/user_names.csv";
 	final static String RESPLISTFPATH = ""; 
 	final static String WEATHERURL = "http://api.openweathermap.org/data/2.5/forecast/daily?zip=";  
-	final static String CONSUMERKEY = "Ym4Xjs7CyRbmWkAryqGmt9OxF";
-	final static String CONSUMERKEYSECRET = "1UIdZXTPkZ1jImRRm5Xx36GboI9PgC0zJziyucoHi65IHZLA6y";
-	final static String ACCESSTOKEN = "838929779592048640-NxFATadd0qj2NSvUFZgV3VJATaXbYg2";
-	final static String ACCESSTOKENSECRET = "dIbIRTBppBWNRSJVl5eaOmr6pFKgE7ZA2D96xxIRyO1Av";
+	final static String CONSUMERKEY = "###";
+	final static String CONSUMERKEYSECRET = "###;
+	final static String ACCESSTOKEN = "###";
+	final static String ACCESSTOKENSECRET = "###";
 	final static Pattern p = Pattern.compile("^[0-9]{5}(?:-[0-9]{4})?$");
 	
 	/////////////////////////
